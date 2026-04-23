@@ -1,0 +1,46 @@
+# .github/workflows/ci.yml
+# GitHub Actions CI Pipeline for Lab 8
+# Triggers automatically on every push and pull request to the main branch.
+
+name: Regression Test Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run PyTest Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python environment
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-html
+
+      # Step 4: Run the full test suite and generate an HTML report
+      - name: Run tests
+        run: |
+          pytest test_bank_account.py -v --html=report.html --self-contained-html
+
+      # Step 5: Upload the HTML test report as a build artifact
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()   # upload even when tests fail
+        with:
+          name: test-report
+          path: report.html
